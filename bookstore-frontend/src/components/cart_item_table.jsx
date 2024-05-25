@@ -1,0 +1,115 @@
+import { Button, Col, Image, Row, Table, InputNumber } from "antd";
+import { changeCartItemNumber, deleteCartItem } from "../service/cart";
+import useMessage from "antd/es/message/useMessage";
+import { handleBaseApiResponse } from "../utils/message";
+import { useEffect, useState } from "react";
+import PlaceOrderModal from "./place_order_modal";
+import { Link } from "react-router-dom";
+
+export default function CartItemTable({ cartItems, onMutate }) {
+    const [messageApi, contextHolder] = useMessage();
+    const [items, setItems] = useState(cartItems);
+    const [showModal, setShowModal] = useState(false);
+    const [selectedItems, setSelectedItems] = useState([]);
+    const handleDeleteItem = async (id) => {
+        let res = await deleteCartItem(id);
+        handleBaseApiResponse(res, messageApi, onMutate);
+        if (res.ok) {
+            setSelectedItems(selectedItems.filter(item => item.id !== id));
+        }
+    }
+
+    useEffect(() => {
+        setItems(cartItems);
+    }, [cartItems]);
+
+    const handleOpenModal = () => {
+        setShowModal(true);
+    }
+
+    const handleCloseModal = () => {
+        setShowModal(false);
+    }
+
+    const computeTotalPrice = () => {
+        const prices = selectedItems.map(item => item.book.price * item.number);
+        return prices.length > 0 ?
+            prices.reduce((prev, cur) => prev + cur) / 100 : 0;
+    }
+
+    const handleNumberChange = async (id, number) => {
+        let res = await changeCartItemNumber(id, number);
+        if (res.ok) {
+            items.filter(item => item.id === id)[0].number = number;
+            let selected = selectedItems.find(item => item.id === id);
+            if (selected) {
+                selected.number = number;
+                setSelectedItems([...selectedItems]);
+            }
+            setItems([...items]);
+        }
+    }
+
+    const columns = [
+        {
+            title: 'Name', dataIndex: 'book', key: 'book_title',
+            render: book => (<Link to={`/book/${book.id}`}>{book.title}</Link>),
+        },
+        {
+            title: 'Sold', dataIndex: 'number', key: 'number',
+            render: (number, item) => <InputNumber min={1} defaultValue={number} value={item.value} onChange={(newNumber) => {
+                handleNumberChange(item.id, newNumber);
+            }} />
+        },
+        {
+            title: 'Price', dataIndex: 'book', key: 'book_price',
+            render: book => book.price / 100
+        },
+        {
+            title: 'Action',
+            dataIndex: '',
+            key: 'action',
+            render: (item) => <Button type="primary" onClick={() => {
+                handleDeleteItem(item.id);
+            }}>Delete</Button>,
+        },
+    ];
+
+    const handleOrderSubmit = () => {
+        setShowModal(false);
+        onMutate();
+    }
+
+    return <>
+        {contextHolder}
+        {showModal && <PlaceOrderModal onCancel={handleCloseModal} selectedItems={selectedItems} onOk={handleOrderSubmit} />}
+        <Table
+            columns={columns}
+            rowSelection={{
+                onChange: (_, selectedItems) => {
+                    setSelectedItems(selectedItems);
+                },
+            }}
+            expandable={{
+                expandedRowRender: (cartItem) => (
+                    <Row justify={"space-between"} gutter={8}>
+                        <Col span={4}>
+                            <Image src={cartItem.book.cover} height={200} />
+                        </Col>
+                        <Col span={20}>
+                            <p>{cartItem.book.description}</p>
+                        </Col>
+                    </Row>
+                ),
+            }}
+            dataSource={items.map(item => ({
+                ...item,
+                key: item.id
+            }))}
+        />
+        <p>Total Price：{computeTotalPrice()}RMB</p>
+        <Button type="primary" disabled={selectedItems.length === 0}
+            onClick={handleOpenModal}
+        >Buy Now</Button>
+    </>
+}

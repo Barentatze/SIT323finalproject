@@ -1,0 +1,30 @@
+server:
+  port: 8080
+  address: 0.0.0.0
+  servlet:
+    session:
+      cookie:
+        same-site: none
+        http-only: true
+        secure: true
+
+#  ssl:
+#    key-store: classpath:keystore.p12
+#    key-store-password: 123456
+#    key-store-type: PKCS12
+#    key-alias: tomcat
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/bookstore?createDatabaseIfNotExist=true
+    username: root
+    password: 123456
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    database: mysql
+    show-sql: true
+    open-in-view: true
+    hibernate:
+      ddl-auto: update
+springdoc:
+  api-docs:
+    path: /api-docs

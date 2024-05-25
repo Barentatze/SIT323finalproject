@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:latest
+    container_name: mysql
+    ports:
+      - "3306:3306"
+      - "8080:8080"
+      - "3000:3000"
+    environment:
+      MYSQL_ROOT_PASSWORD: "123456"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  app:
+    image: jifengchen/back-end
+    container_name: backend
+    network_mode: service:mysql
+    restart: always
+    depends_on:
+      - mysql
+
+  react:
+    image: jifengchen/front-end
+    container_name: react
+    network_mode: service:mysql
+    restart: always
+    depends_on:
+      - app
+
