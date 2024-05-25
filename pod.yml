@@ -244,22 +244,12 @@ spec:
   selector:
     kubevirt.io/domain: ubuntu2204
   ports:
-    - protocol: TCP
+    - name: frontend
+      protocol: TCP
       port: 3000
       targetPort: 3000
-  type: LoadBalancer
-
----
-#Service 连不上
-apiVersion: v1
-kind: Service
-metadata:
-  name: bookstore-backend
-spec:
-  selector:
-    kubevirt.io/domain: ubuntu2204
-  ports:
-    - protocol: TCP
+    - name: backend
+      protocol: TCP
       port: 8080
       targetPort: 8080
   type: LoadBalancer

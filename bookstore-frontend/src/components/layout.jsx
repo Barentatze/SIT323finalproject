@@ -14,10 +14,7 @@ export function BasicLayout({ children }) {
                 {children}
             </Content>
             <Footer className="footer">
-                <Space direction="vertical">
-                    <Link target="_blank" to="https://github.com/Okabe-Rintarou-0">关于作者</Link>
-                    <div>电子书城 REINS 2024</div>
-                </Space>
+
             </Footer>
         </Layout>
     )
